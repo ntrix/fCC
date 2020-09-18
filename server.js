@@ -1,30 +1,45 @@
-const express = require("express");
-const app = express();
-const port = 3000;
+'use strict';
 
-// enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) for testing by FCC
-var cors = require("cors");
+var express = require('express');
+var mongo = require('mongodb');
+var mongoose = require('mongoose');
 
-app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
+var cors = require('cors');
+var bodyParser = require('body-parser');
 
-// http://expressjs.com/en/starter/static-files.html
-app.use(express.static("public"));
+var app = express();
 
-// http://expressjs.com/en/starter/basic-routing.html
-app.get("/", function (req, res) {
-	res.sendFile(__dirname + "/views/index.html");
+// Basic Configuration 
+var port = process.env.PORT || 3000;
+
+/** this project needs a db !! **/ 
+// mongoose.connect(process.env.DB_URI);
+var mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
+app.use(cors());
+
+/** this project needs to parse POST bodies **/
+// you should mount the body-parser here
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use('/public', express.static(process.cwd() + '/public'));
+
+app.get('/', function(req, res){
+  res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// second API endpoint...
-app.use(function(req, res) {
-  res.json({
-    "ipaddress": req.ip.slice(7),
-    "language": req.acceptsLanguages(),
-    "software": req.headers['user-agent']
-  })
+  
+// your first API endpoint... 
+app.post('/api/shorturl/new', function(req, res) {
+  res.json({"original_url": reg.body,"short_url": 1})
 })
 
-// listen for requests :)
-var listener = app.listen(port, function () {
-	console.log("Your app is listening on port " + listener.address().port);
+app.get("/api/hello", function (req, res) {
+  res.json({greeting: 'hello API'});
+});
+
+
+app.listen(port, function () {
+  console.log('Node.js listening ...');
 });
