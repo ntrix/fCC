@@ -15,17 +15,14 @@ app.get("/", function (req, res) {
 	res.sendFile(__dirname + "/views/index.html");
 });
 
-// your first API endpoint...
-app.get("/api/timestamp/:date_string?", function (req, res) {
-	var dateString = req.params.date_string;
-
-	if (dateString) date = new Date(+dateString ? +dateString : dateString);
-	else date = new Date();
-
-	if (date.getTime())
-		res.json({ unix: date.getTime(), utc: date.toUTCString() });
-	else res.json({ error: "Invalid Date" });
-});
+// second API endpoint...
+app.use(function(req, res) {
+  res.json({
+    "ipaddress": req.ip.slice(7),
+    "language": req.acceptsLanguages(),
+    "software": req.headers['user-agent']
+  })
+})
 
 // listen for requests :)
 var listener = app.listen(port, function () {
