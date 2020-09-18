@@ -4,6 +4,7 @@ const port = 3000;
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) for testing by FCC
 var cors = require("cors");
+
 app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
@@ -27,6 +28,6 @@ app.get("/api/timestamp/:date_string?", function (req, res) {
 });
 
 // listen for requests :)
-var listener = app.listen(process.env.PORT, function () {
+var listener = app.listen(port, function () {
 	console.log("Your app is listening on port " + listener.address().port);
 });
