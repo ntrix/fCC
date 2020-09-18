@@ -1,1 +1,1 @@
-# fCC
+# FreeCodeCamp projects
