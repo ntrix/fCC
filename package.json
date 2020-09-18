@@ -1,0 +1,28 @@
+{
+	"name": "fcc",
+	"version": "1.0.0",
+	"description": "freeCodeCamp projects: project 1",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ntrix/fCC.git"
+	},
+	"author": "ntrix",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/ntrix/fCC/issues"
+	},
+	"homepage": "https://github.com/ntrix/fCC#readme",
+	"keywords": [
+		"API",
+		"MicroServices",
+		"Projects",
+		"Timestamp"
+	],
+	"dependencies": {
+		"express": "^4.17.1"
+	}
+}
