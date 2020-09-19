@@ -7,7 +7,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 
 mongoose.connect(
-	"mongodb+srv://nt1:khigio2kDBfcc1@fccdb0.avkln.mongodb.net/fcc1?retryWrites=true&w=majority",
+	process.env.MONGO_URI,
 	{
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
@@ -26,71 +26,106 @@ app.get("/", (req, res) => {
 
 const { Schema } = mongoose;
 const personSchema = new Schema(
+	{ username: { type: String, required: true } },
+	{ versionKey: false }
+);
+const Persons = mongoose.model("Persons", personSchema);
+
+const exSchema = new Schema(
 	{
-		username: { type: String, required: true },
-		date: String,
+		foreignId: { type: String, required: true },
+		date: Date,
 		duration: Number,
 		description: String,
 	},
 	{ versionKey: false }
 );
-const Person = mongoose.model("Person", personSchema);
+const Exercises = mongoose.model("Exercises", exSchema);
 
 app.post("/api/exercise/new-user", function (req, res) {
-	var uname = req.body.username;
-	Person.find({ username: uname }, function (err, data) {
-		if (err) res.send(err);
-		else {
-			if (data.length) res.send("Username already taken");
-			else {
-				var person = new Person({ username: uname });
-				person.save(function (err, data) {
-					if (err) res.send(err);
-					else res.json({ username: uname, _id: data._id });
-				});
-			}
-		}
+	var username = req.body.username;
+	Persons.find({ username: username }, function (err, data) {
+		if (err) throw new err;
+		if (data.length) res.send("Username already taken");
+
+		var person = new Persons({ username: username });
+		person.save(function (err, data) {
+			if (err) throw new err;
+			res.json(data);
+		});
 	});
 });
+
 app.get("/api/exercise/users", function (req, res) {
-	Person.find({}).then((data) => {
-		var list = [];
-		data.forEach((d) => {
-			var per = { username: d.username, _id: d._id };
-			list.push(per);
-		});
-		res.json(data);
-	});
+	Persons.find({}).then((d) => res.json(d));
 });
 
 app.post("/api/exercise/add", function (req, res) {
-	var userId = req.body.userId;
-	Person.findOneAndUpdate(
-		{ _id: userId },
-		{
-			date: (req.body.date
-				? new Date(req.body.date)
-				: new Date()
-			).toDateString(),
-			duration: req.body.duration,
-			description: req.body.description,
-		},
-		{ new: true },
-		function (err, data) {
-			if (err) res.send(err);
-			else res.json(data);
-		}
-	);
+	var id = req.body.userId,
+		date = req.body.date ? new Date(req.body.date) : new Date();
+	var username;
+	var e = new Exercises({
+		foreignId: id,
+		date: date,
+		duration: req.body.duration,
+		description: req.body.description,
+	});
+	var exJson = {
+		_id: id,
+		date: date.toDateString(),
+		duration: e.duration,
+		description: e.description,
+	};
+
+	Persons.findById(id, "username", function (err, data) {
+		if (err) throw new err;
+		else username = data.username;
+
+		if (username) exJson.username = username;
+		e.save(function (err) {
+			if (err) throw new err;
+			else res.json(exJson);
+		});
+	});
 });
 
 app.get("/api/exercise/log", function (req, res) {
-	Person.find({}).then((data) => {
-		var list = [];
-		data.forEach((d) => {
-			var per = { username: d.username, _id: d._id };
-			list.push(per);
-		});
-		res.json(data);
+	var id = req.query.userId,
+		fromDate = req.query.from ? req.query.from : new Date(0),
+		toDate = req.query.to ? req.query.to : new Date();
+
+	Persons.findById(id, function (err, person) {
+		if (err) throw new err;
+
+		if (req.query.limit)
+			Exercises.find({ foreignId: id }, "description duration date", done);
+		else
+			Exercises.find(
+				{ foreignId: id, date: { $gte: fromDate, $lte: toDate } },
+				"description duration date",
+				done
+			);
+
+		function done(err, ex) {
+			var result = [];
+			if (err) throw new err;
+			for (let e of ex) {
+				if (req.query.limit-- == 0) break;
+				result.push(
+					(e = {
+						description: e.description,
+						duration: e.duration,
+						date: e.date.toDateString(),
+					})
+				);
+			}
+			res.json({
+				_id: id,
+				username: person.username,
+				count: result.length,
+				log: result,
+			});
+		}
 	});
 });
 
